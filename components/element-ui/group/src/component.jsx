@@ -1,12 +1,16 @@
 import {hasProperty} from '@form-create/utils/lib/type';
 import deepExtend, {deepCopy} from '@form-create/utils/lib/deepextend';
 import extend from '@form-create/utils/lib/extend';
+import draggable from 'vuedraggable';
 import './style.css';
 
 const NAME = 'fcGroup';
 
 export default {
     name: NAME,
+    components: {
+        draggable
+    },
     props: {
         field: String,
         rule: [Array, Object],
@@ -190,6 +194,9 @@ export default {
             if (emit) {
                 this.$nextTick(() => this.$emit('add', rule, Object.keys(this.cacheRule).length - 1));
             }
+            alert("123");
+            console.log('addRule', this.cacheRule);
+            console.log('hello 123');
         },
         add$f(i, key, $f) {
             this.cacheRule[key].$f = $f;
@@ -240,6 +247,18 @@ export default {
             this.$set(this.sort, index, this.sort[index + sort]);
             this.sort[index + sort] = a;
             this.formData(0);
+        },
+        onEnd(event) {
+            // 处理拖动结束事件
+            console.log('拖动结束', event);
+            this.updateFormData();
+        },
+        updateFormData() {
+            // 更新表单数据
+            const sortedData = this.sort.map(key => {
+                return this.cacheRule[key];
+            });
+            this.cacheRule = sortedData;
         },
         makeIcon(total, index, key) {
             if (this.$scopedSlots.button) {
@@ -297,7 +316,8 @@ export default {
                 vm: this,
                 add: this.add
             })) : <div key={'a_def'} class="_fc-group-plus-minus _fc-group-add"
-                on-click={this.add}/>) : keys.map((key, index) => {
+                on-click={this.add}/>) : <draggable vModel={this.sort} onEnd={this.onEnd}>
+                { keys.map((key, index) => {
                 const {rule, options} = this.cacheRule[key];
                 const btn = button && !disabled ? this.makeIcon(keys.length, index, key) : [];
                 return <div class="_fc-group-container" key={key}>
@@ -320,7 +340,8 @@ export default {
                     <div class="_fc-group-idx">{index + 1}</div>
                     {(btn.length) ? <div class="_fc-group-handle">{btn}</div> : null}
                 </div>
-            });
+            })}
+            </draggable>;
         return <div key={'con'} class={'_fc-group ' + (disabled ? '_fc-group-disabled' : '')}>{children}</div>
     },
 }
